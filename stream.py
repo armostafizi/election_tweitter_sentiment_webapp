@@ -3,7 +3,7 @@
 import tweepy
 #override tweepy.StreamListener to add logic to on_status
 class StreamListener(tweepy.StreamListener):
-    def __init__(self, max_count = 5, verbose = False):
+    def __init__(self, max_count, query_phrases, table, connection, verbose):
         from datetime import datetime
         self.count = 0
         self.verbose = verbose
@@ -11,6 +11,9 @@ class StreamListener(tweepy.StreamListener):
         self.last_window = datetime.utcnow()
         self.window_count = 0
         self.window_sentiment = []
+        self.table = table
+        self.connection = connection
+        self.query_phrases = query_phrases
         
     @staticmethod
     def get_text(tweet):
@@ -37,6 +40,7 @@ class StreamListener(tweepy.StreamListener):
     def update_agg_sents(self, tweet):
         from datetime import datetime
         import numpy as np
+
         diff = (tweet.time - self.last_window).total_seconds()
         if diff < 30:
             self.window_count += 1
@@ -46,10 +50,17 @@ class StreamListener(tweepy.StreamListener):
             print('Count:', self.window_count)
             print('Avg Sentiment:', np.mean(self.window_sentiment))
             print('*************')
+                        # TODO: For now - change later
+            query = self.table.insert().values({'Time' : self.last_window,
+                                                'Candidate' : self.query_phrases[0],
+                                                'Count' : self.window_count,
+                                                'Sentiment' : np.mean(self.window_sentiment)}) 
+            ResultProxy = self.connection.execute(query)
+            
             self.last_window = datetime.utcnow()
             self.window_count = 0
             self.window_sentiment = []
-        
+
     def disp(self, data, tweet):
         if self.verbose:
             print('*************')
