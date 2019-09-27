@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # variables:
 
 query = {'@BernieSanders': 'Bernie Sanders',     # Bernie

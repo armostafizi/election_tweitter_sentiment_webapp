@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 ## Tweet Streaming Object
 
 import tweepy

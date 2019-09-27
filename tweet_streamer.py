@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!./venv/bin/python3
 
 # Tweet Streamer 
 #    This function streams tweets give a list of query phrases.

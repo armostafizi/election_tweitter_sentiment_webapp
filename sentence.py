@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Sentence Object
 
 class Sentence:
