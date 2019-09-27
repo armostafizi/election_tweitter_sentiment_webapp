@@ -43,4 +43,4 @@ if __name__ == '__main__':
     tweet_count = int(sys.argv[1])
     tweets = download_tweets(query_phrase = 'Bernie Sanders', tweet_count = tweet_count)
     for tweet in tweets:
-        tweet.disp()
+        print(tweet)

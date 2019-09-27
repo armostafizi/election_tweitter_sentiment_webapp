@@ -18,12 +18,14 @@ class Tweet:
         self.sentiment = (np.mean([s.sentiment['textblob']['pol'] for s in self.sentences]),
                                   [s.sentiment['textblob']['pol'] for s in self.sentences])
     
-    def disp(self):
-        print('********************')
-        print(self.text)
-        print('====================')
+    def __str__(self):
+        tweet_str = """********************
+%s
+====================\n""" % (self.text)
         for sentence in self.sentences:
-            print(sentence)
-            print('--------------------')
-        print('Compount Sentiment:', self.sentiment)
-        print('********************')
+            tweet_str += str(sentence) + '\n' + '--------------------\n'
+        tweet_str += 'Compount Sentiment: ' + str(self.sentiment) + '\n********************'
+        return tweet_str
+
+    def __repr__(self):
+        return self.__str__()
