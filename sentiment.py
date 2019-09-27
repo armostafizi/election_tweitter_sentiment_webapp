@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!./venv/bin/python3
 
 # Sentiment Analysis
 #    Returns the sentiment of a text with different methods
