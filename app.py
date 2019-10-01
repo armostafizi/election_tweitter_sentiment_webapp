@@ -16,7 +16,8 @@ app.config['DEBUG'] = True
 if app.config["DEBUG"]:
     @app.after_request
     def after_request(response):
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, public, max-age=0"
+        response.headers["Cache-Control"] = "no-cache, no-store, " +\
+                                            "must-revalidate, public, max-age=0"
         response.headers["Expires"] = 0
         response.headers["Pragma"] = "no-cache"
         return response
@@ -30,7 +31,7 @@ thread_stop_event = Event()
 
 class RandomThread(Thread):
     def __init__(self):
-        self.delay = 15
+        self.delay = 10
         super(RandomThread, self).__init__()
 
     def monitor_sentimentsDB(self):
@@ -43,11 +44,14 @@ class RandomThread(Thread):
         metadata = db.MetaData(engine)
         DBSession = sessionmaker(bind=engine)
         session = DBSession()
-
+        last_id = None
         while not thread_stop_event.isSet():
             obj = session.query(Sentiment_ent).order_by(Sentiment_ent.Id.desc()).first()
             print(str(obj))
-            socketio.emit('newdata', {'txt': str(obj)}, namespace='/test')
+            if last_id != obj.Id:
+                print('sending data ...')
+                socketio.emit('newdata', {'txt': str(obj)}, namespace='/test')
+            last_id = obj.Id
             sleep(self.delay)
 
     def run(self):
@@ -87,7 +91,6 @@ def test_disconnect():
 
 if __name__ == '__main__':
     socketio.run(app)
-
-
+    
 
 
