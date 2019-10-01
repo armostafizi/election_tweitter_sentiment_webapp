@@ -9,7 +9,8 @@ def stream_tweets(query_phrases, tweet_count, verbose = False):
     import api_keys
     from tweepy import OAuthHandler, API, Stream
     from stream import StreamListener
-    import sqlalchemy as db
+    from sqlalchemy_declarative import Base
+    from sqlalchemy import create_engine
 
     auth = OAuthHandler(api_keys.API_KEY, api_keys.API_SECRET)
     auth.set_access_token(api_keys.ACS_TOKEN, api_keys.ACS_SECRET)
@@ -20,28 +21,8 @@ def stream_tweets(query_phrases, tweet_count, verbose = False):
         print ("Can't Authenticate")
         sys.exit(-1)
 
-    # create the database and the table if they don't exist
-    engine = db.create_engine("sqlite:///election.sqlite")  # Access the DB Engine
-    connection = engine.connect()
-    metadata = db.MetaData(engine)
-    if not engine.dialect.has_table(engine, 'sentiments'):  # If table don't exist, Create.
-        # Create a table with the appropriate Columns
-        sent_table = db.Table('sentiments', metadata,
-                              db.Column('Id', db.Integer, primary_key=True, nullable=False), 
-                              db.Column('Time', db.DateTime),
-                              db.Column('Candidate', db.String),
-                              db.Column('Count', db.Integer),
-                              db.Column('Sentiment', db.Float),
-                              sqlite_autoincrement=True)
-        # Implement the creation
-        metadata.create_all()
-    else:
-        sent_table = db.Table('sentiments', metadata, autoload=True, autoload_with=engine)
-
     streamListener = StreamListener(max_count = tweet_count,
                                     query_phrases = query_phrases,
-                                    table = sent_table,
-                                    connection = connection,
                                     verbose = verbose)
     stream = tweepy.Stream(auth = api.auth, listener=streamListener)
 

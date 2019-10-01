@@ -3,18 +3,26 @@
 import tweepy
 #override tweepy.StreamListener to add logic to on_status
 class StreamListener(tweepy.StreamListener):
-    def __init__(self, max_count, query_phrases, table, connection, verbose):
+    def __init__(self, max_count, query_phrases, verbose):
         from datetime import datetime
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+        from sqlalchemy_declarative import Base, Sentiment_ent
+
         self.count = 0
         self.verbose = verbose
         self.max_count = max_count
         self.last_window = datetime.utcnow()
         self.window_count = 0
         self.window_sentiment = []
-        self.table = table
-        self.connection = connection
         self.query_phrases = query_phrases
-        
+        self.interval = 10 # seconds
+
+        engine = create_engine('sqlite:///election.sqlite')
+        Base.metadata.bind = engine
+        DBSession = sessionmaker(bind=engine)
+        self.session = DBSession()
+ 
     @staticmethod
     def get_text(tweet):
         try:
@@ -40,9 +48,10 @@ class StreamListener(tweepy.StreamListener):
     def update_agg_sents(self, tweet):
         from datetime import datetime
         import numpy as np
+        from sqlalchemy_declarative import Sentiment_ent, Base
 
         diff = (tweet.time - self.last_window).total_seconds()
-        if diff < 30:
+        if diff < self.interval:
             self.window_count += 1
             self.window_sentiment.append(tweet.sentiment[0])
         else:
@@ -50,13 +59,13 @@ class StreamListener(tweepy.StreamListener):
             print('Count:', self.window_count)
             print('Avg Sentiment:', np.mean(self.window_sentiment))
             print('*************')
-                        # TODO: For now - change later
-            query = self.table.insert().values({'Time' : self.last_window,
-                                                'Candidate' : self.query_phrases[0],
-                                                'Count' : self.window_count,
-                                                'Sentiment' : np.mean(self.window_sentiment)}) 
-            ResultProxy = self.connection.execute(query)
-            
+            # TODO: For now - change later
+            self.session.add(Sentiment_ent(Time = self.last_window,
+                                           Candidate = self.query_phrases[0],
+                                           Count = self.window_count,
+                                           Sentiment = np.mean(self.window_sentiment))) 
+            self.session.commit()
+
             self.last_window = datetime.utcnow()
             self.window_count = 0
             self.window_sentiment = []
